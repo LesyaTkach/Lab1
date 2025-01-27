@@ -1,114 +1,164 @@
-# TODO Написать 3 класса с документацией и аннотацией типов
+
 from abc import ABC, abstractmethod
+from typing import List, Tuple, Optional
+import doctest
 
-
-class Furniture(ABC):
+class Book(ABC):
     """
-    Абстрактный класс для описания мебели.
+    Абстрактный класс, представляющий книгу.
 
     Атрибуты:
-        material (str): Материал, из которого сделана мебель.
-        dimensions (tuple): Размеры мебели (длина, ширина, высота).
+        id (int): Идентификатор книги.
+        name (str): Название книги.
+        pages (int): Количество страниц в книге.
+    
+    Примеры:
+         >>> class ConcreteBook(Book):
+         ...     def __init__(self, id_, name, pages):
+         ...         super().__init__(id_, name, pages)
+         >>> book = ConcreteBook(id_=1, name='test_name', pages=200)
     """
 
-    def __init__(self, material: str, dimensions: tuple):
-        if not material:
-            raise ValueError("Материал не может быть пустым.")
-        if len(dimensions) != 3 or not all(isinstance(dim, (int, float)) and dim > 0 for dim in dimensions):
-            raise ValueError("Размеры должны быть положительными числами и содержать 3 элемента.")
+    def __init__(self, id_: int, name: str, pages: int):
+        if not isinstance(id_, int) or id_ <= 0:
+            raise ValueError("ID книги должно быть целым положительным числом.")
+        if not isinstance(name, str) or not name:
+            raise ValueError("Название книги должно быть не пустой строкой.")
+        if not isinstance(pages, int) or pages <= 0:
+            raise ValueError("Количество страниц должно быть целым положительным числом.")
 
-        self.material = material
-        self.dimensions = dimensions
-
-    @abstractmethod
-    def assemble(self) -> None:
-        """
-        Метод для сборки мебели.
-        """
-        ...
-
-    @abstractmethod
-    def move(self, new_location: str) -> None:
-        """
-        Метод для перемещения мебели.
-
-        Args:
-            new_location (str): Новое местоположение мебели.
-        """
-        ...
-
-
-class Tree(ABC):
-    """
-    Абстрактный класс для описания дерева.
-
-    Атрибуты:
-        species (str): Вид дерева.
-        age (int): Возраст дерева.
-    """
-
-    def __init__(self, species: str, age: int):
-        if not species:
-            raise ValueError("Вид дерева не может быть пустым.")
-        if age < 0:
-            raise ValueError("Возраст дерева должен быть положительным.")
-
-        self.species = species
-        self.age = age
-
-    @abstractmethod
-    def photosynthesize(self) -> None:
-        """
-        Метод для процесса фотосинтеза.
-        """
-        ...
-
-    @abstractmethod
-    def grow(self, years: int) -> None:
-        """
-        Метод для роста дерева.
-
-        Args:
-            years (int): Количество лет, на которое дерево выросло.
-        """
-        ...
-
-
-class SocialMedia(ABC):
-    """
-    Абстрактный класс для описания социальной сети.
-
-    Атрибуты:
-        name (str): Название социальной сети.
-        active_users (int): Количество активных пользователей.
-    """
-
-    def __init__(self, name: str, active_users: int):
-        if not name:
-            raise ValueError("Название социальной сети не может быть пустым.")
-        if active_users < 0:
-            raise ValueError("Количество пользователей должно быть положительным.")
-
+        self.id = id_
         self.name = name
-        self.active_users = active_users
+        self.pages = pages
 
-    @abstractmethod
-    def post(self, content: str) -> None:
+    def __str__(self) -> str:
         """
-        Метод для публикации контента.
+        Возвращает строку в формате "Книга \"название_книги\"".
+        
+        Примеры:
+            >>> class ConcreteBook(Book):
+            ...     def __init__(self, id_, name, pages):
+            ...         super().__init__(id_, name, pages)
+            >>> book = ConcreteBook(id_=1, name='test_name', pages=200)
+            >>> print(book)
+            Книга "test_name"
+        """
+        return f'Книга "{self.name}"'
 
-        Args:
-            content (str): Текст публикации.
+    def __repr__(self) -> str:
         """
-        ...
+        Возвращает валидную python строку для инициализации экземпляра Book.
+        
+        Примеры:
+            >>> class ConcreteBook(Book):
+            ...     def __init__(self, id_, name, pages):
+            ...         super().__init__(id_, name, pages)
+            >>> book = ConcreteBook(id_=1, name='test_name', pages=200)
+            >>> repr(book)
+            "Book(id_=1, name='test_name', pages=200)"
+        """
+        return f"Book(id_={self.id}, name='{self.name}', pages={self.pages})"
 
-    @abstractmethod
-    def add_user(self) -> None:
+
+class Library:
+    """
+    Класс, представляющий библиотеку книг.
+
+    Атрибуты:
+        books (list[Book]): Список книг в библиотеке.
+    
+     Примеры:
+        >>> class ConcreteBook(Book):
+        ...     def __init__(self, id_, name, pages):
+        ...         super().__init__(id_, name, pages)
+        >>> book1 = ConcreteBook(id_=1, name='test_name_1', pages=200)
+        >>> book2 = ConcreteBook(id_=2, name='test_name_2', pages=400)
+        >>> library = Library(books=[book1, book2])
+    """
+    def __init__(self, books: list[Book] = None):
+      if books is None:
+        self.books = []
+      else:
+        if not isinstance(books, list):
+          raise ValueError("Аргумент books должен быть списком")
+        for book in books:
+          if not isinstance(book, Book):
+             raise ValueError("Список книг должен содержать экземпляры класса Book")
+        self.books = books
+
+    def get_next_book_id(self) -> int:
         """
-        Метод для добавления нового пользователя.
+        Возвращает идентификатор для новой книги.
+        Если книг в библиотеке нет, то вернуть 1.
+        Если книги есть, то вернуть идентификатор последней книги увеличенный на 1.
+        
+         Примеры:
+            >>> class ConcreteBook(Book):
+            ...     def __init__(self, id_, name, pages):
+            ...         super().__init__(id_, name, pages)
+            >>> book1 = ConcreteBook(id_=1, name='test_name_1', pages=200)
+            >>> book2 = ConcreteBook(id_=2, name='test_name_2', pages=400)
+            >>> library = Library(books=[book1, book2])
+            >>> library.get_next_book_id()
+            3
+            >>> empty_library = Library()
+            >>> empty_library.get_next_book_id()
+            1
         """
-        ...
-if __name__ == "__main__":
-    # TODO работоспособность экземпляров класса проверить с помощью doctest
-      import doctest
-      doctest.testmod()
+        if not self.books:
+            return 1
+        return self.books[-1].id + 1
+
+    def get_index_by_book_id(self, book_id: int) -> int:
+        """
+        Возвращает индекс книги в списке по ее ID.
+        Если книга существует, то вернуть индекс из списка.
+        Если книги нет, то вызвать ошибку ValueError с сообщением: "Книги с запрашиваемым id не существует".
+        
+         Примеры:
+            >>> class ConcreteBook(Book):
+            ...     def __init__(self, id_, name, pages):
+            ...         super().__init__(id_, name, pages)
+            >>> book1 = ConcreteBook(id_=1, name='test_name_1', pages=200)
+            >>> book2 = ConcreteBook(id_=2, name='test_name_2', pages=400)
+            >>> library = Library(books=[book1, book2])
+            >>> library.get_index_by_book_id(2)
+            1
+            >>> try:
+            ...   library.get_index_by_book_id(3)
+            ... except ValueError as e:
+            ...    print(e)
+            Книги с запрашиваемым id не существует
+        """
+        if not isinstance(book_id, int) or book_id <= 0:
+            raise ValueError("ID книги должно быть целым положительным числом.")
+        for index, book in enumerate(self.books):
+          if book.id == book_id:
+            return index
+        raise ValueError("Книги с запрашиваемым id не существует")
+
+if __name__ == '__main__':
+    doctest.testmod()
+    # инициализируем список книг
+     list_books = [
+   Book(id_=book_dict["id"], name=book_dict["name"], pages=book_dict["pages"]) for book_dict in BOOKS_DATABASE
+     ]
+     for book in list_books:
+         print(book)  # проверяем метод str
+
+     print(list_books)  # проверяем метод repr
+
+    # # проверяем работоспособность методов класса Library
+    # library = Library(list_books)
+    # print(f"Следующий id книги: {library.get_next_book_id()}")
+
+    # try:
+    #   book_index = library.get_index_by_book_id(2)
+    #   print(f"Индекс книги с ID=2: {book_index}")
+    #   book_index = library.get_index_by_book_id(3)
+    #   print(f"Индекс книги с ID=3: {book_index}")
+    # except ValueError as e:
+    #   print(f"Произошла ошибка: {e}")
+
+    # empty_library = Library()
+    # print(f"Следующий id книги в пустой библиотеке: {empty_library.get_next_book_id()}")
